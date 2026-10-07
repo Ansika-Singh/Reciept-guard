@@ -1,7 +1,12 @@
-# RECEIPTGUARD AI
+# RUPERTRACE — ReceiptGuard AI
+
 > **"Don't just store your receipt. Protect what you already bought."**
 
-ReceiptGuard AI is a Personal Purchase Protection Agent built for responsible, grounded AI hackathon evaluation. Immediately at ingestion, ReceiptGuard parses receipts, matches store return and warranty policies, performs deterministic date arithmetic (`purchase_date + policy_days`), flags return windows expiring soon (`< 7 days`), grounds RAG Q&A, and verifies order status directly against the database truth without LLM hallucinations.
+**Rupertrace** (formerly ReceiptGuard AI) is a Personal Purchase Protection Agent built for responsible, grounded AI hackathon evaluation. Immediately at ingestion, Rupertrace parses receipts, matches store return and warranty policies, performs deterministic date arithmetic (`purchase_date + policy_days`), flags return windows expiring soon (`< 7 days`), grounds RAG Q&A, and verifies order status directly against the database truth without LLM hallucinations.
+
+### 🔗 Live Demo
+
+> **[https://receiptguard-ai-one.vercel.app](https://receiptguard-ai-one.vercel.app)**
 
 ---
 
@@ -52,7 +57,7 @@ Chroma Vector DB      Calculated Deadlines      Mock Orders
 - **Backend**: Python 3.10+, FastAPI, Pydantic v2, SQLAlchemy, SQLite, PyMuPDF, ChromaDB, LangChain.
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Lucide React, Framer Motion, Axios.
 - **Testing**: Pytest unit test suite covering date arithmetic, order lookups, and security isolation.
-- **Deployment**: Docker, Docker Compose, Nginx.
+- **Deployment**: Vercel (Frontend + Serverless API), Docker, Docker Compose, Nginx.
 
 ---
 
@@ -106,6 +111,24 @@ docker-compose up --build
 ```
 
 Access frontend at `http://localhost:5173` and API docs at `http://localhost:8000/docs`.
+
+---
+
+### Option 3: Vercel Deployment (Live)
+
+The production frontend and serverless API are deployed on Vercel:
+
+> **[https://receiptguard-ai-one.vercel.app](https://receiptguard-ai-one.vercel.app)**
+
+To deploy your own:
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy from project root
+vercel --prod
+```
 
 ---
 
