@@ -441,3 +441,61 @@ class VaultStatsResponse(BaseModel):
     expiring_soon_count: int = 0
     total_purchase_value: float = 0.0
     currency: str = "₹"
+
+class ReceiptContribution(BaseModel):
+    receipt_id: str
+    store: str
+    purchase_date: str
+    invoice_number: Optional[str] = None
+    order_id: Optional[str] = None
+    grand_total: float
+    percentage: float
+    sector: str
+    items_count: int
+
+class SectorSpendingItem(BaseModel):
+    name: str
+    total_spent: float
+    percentage: float
+    color: str
+    receipts_count: int
+    items_count: int
+
+class TopSectorInfo(BaseModel):
+    name: str
+    total_spent: float
+    percentage: float
+    store: Optional[str] = None
+    items_count: int = 0
+
+class ExpiringProtectionItem(BaseModel):
+    calc_id: str
+    receipt_id: str
+    item_id: str
+    item_name: str
+    store: str
+    category: str
+    price: float
+    return_deadline: Optional[str] = None
+    return_days_remaining: Optional[int] = None
+    warranty_deadline: Optional[str] = None
+    warranty_days_remaining: Optional[int] = None
+    status_label: str
+    urgency: str  # critical, warning, upcoming, safe
+    applicable_policy_section: Optional[str] = None
+    explanation: Optional[str] = None
+
+class VaultAnalyticsResponse(BaseModel):
+    total_purchase_value: float
+    currency: str = "₹"
+    total_receipts: int
+    gross_subtotal: float
+    tax_total: float
+    discount_total: float
+    shipping_total: float
+    calculation_formula: str
+    receipt_contributions: List[ReceiptContribution] = []
+    top_sector: TopSectorInfo
+    sectors: List[SectorSpendingItem] = []
+    expiring_soon_count: int
+    expiring_items: List[ExpiringProtectionItem] = []

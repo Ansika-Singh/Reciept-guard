@@ -15,7 +15,8 @@ import {
   AlertTriangle, 
   Plus, 
   RefreshCw,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import type { ReceiptVaultCard, VaultStats } from '../types';
 import { 
@@ -31,6 +32,7 @@ import { ReceiptDetailModal } from './ReceiptDetailModal';
 interface ReceiptVaultProps {
   shopperId?: string;
   onOpenUploader: () => void;
+  onFileUpload?: (file: File) => void;
   onAskReceiptGuard?: (receiptId: string, storeName: string) => void;
   refreshTrigger?: number;
 }
@@ -38,6 +40,7 @@ interface ReceiptVaultProps {
 export const ReceiptVault: React.FC<ReceiptVaultProps> = ({
   shopperId = 'demo-shopper-001',
   onOpenUploader,
+  onFileUpload,
   onAskReceiptGuard,
   refreshTrigger = 0
 }) => {
@@ -59,6 +62,8 @@ export const ReceiptVault: React.FC<ReceiptVaultProps> = ({
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [receiptToDelete, setReceiptToDelete] = useState<ReceiptVaultCard | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isPasteModalOpen, setIsPasteModalOpen] = useState<boolean>(false);
+  const [pastedReceiptText, setPastedReceiptText] = useState<string>('');
 
   const fetchVaultData = useCallback(async () => {
     setLoading(true);
@@ -146,22 +151,43 @@ export const ReceiptVault: React.FC<ReceiptVaultProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-3 relative z-10">
+        <div className="flex items-center space-x-2.5 relative z-10">
           <button
             onClick={fetchVaultData}
             disabled={loading}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition"
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition cursor-pointer"
             title="Refresh Vault"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
+
           <button
-            onClick={onOpenUploader}
-            className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm hover:shadow-md transition transform hover:-translate-y-0.5"
+            onClick={() => setIsPasteModalOpen(true)}
+            className="flex items-center space-x-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs border border-slate-200 transition cursor-pointer shadow-2xs"
+            title="Paste receipt or invoice text directly"
           >
+            <FileText className="w-4 h-4 text-indigo-600" />
+            <span>Paste Receipt Text</span>
+          </button>
+
+          <label className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-sm hover:shadow-md transition transform hover:-translate-y-0.5 cursor-pointer">
             <Plus className="w-4 h-4" />
             <span>Upload Receipt</span>
-          </button>
+            <input
+              type="file"
+              className="hidden"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.txt"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  if (onFileUpload) {
+                    onFileUpload(e.target.files[0]);
+                  } else {
+                    onOpenUploader();
+                  }
+                }
+              }}
+            />
+          </label>
         </div>
       </div>
 
@@ -540,6 +566,114 @@ export const ReceiptVault: React.FC<ReceiptVaultProps> = ({
                 ) : (
                   <span>Delete Receipt</span>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PASTE RECEIPT TEXT MODAL */}
+      {isPasteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 w-full max-w-xl rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center shadow-xs">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Add from Receipt Text</h3>
+                  <p className="text-[11px] text-slate-500">Paste your digital invoice, email bill, or receipt SMS</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPasteModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              No need to type manually! Paste receipt text below and Rupertrace will extract merchant, date, items, and totals directly for you to check.
+            </p>
+
+            {/* Quick Sample Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="text-slate-400 font-medium">Try sample:</span>
+              <button
+                type="button"
+                onClick={() => setPastedReceiptText(
+`Retail Invoice: Croma Electronics
+Date: 2026-09-20  Time: 18:30
+Invoice No: CROMA-BLR-8821
+Items:
+1. Sony WH-1000XM5 Headphones - Qty: 1 - Price: ₹24,990.00
+2. Type-C Fast Charger - Qty: 1 - Price: ₹1,499.00
+Subtotal: ₹26,489.00
+GST (18%): ₹4,768.02
+Grand Total: ₹31,257.02
+Return Window: 15 Days from purchase`
+                )}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition cursor-pointer border border-slate-200/80"
+              >
+                Croma Electronics Bill
+              </button>
+              <button
+                type="button"
+                onClick={() => setPastedReceiptText(
+`CAFE COFFEE DAY - Tax Invoice
+Bill No: CCD-9941  Date: 2026-09-20
+Item 1: Cappuccino Large (Qty 2) - ₹440.00
+Item 2: Blueberry Muffin (Qty 1) - ₹180.00
+CGST 2.5%: ₹15.50
+SGST 2.5%: ₹15.50
+Total Payable: ₹651.00
+Thank you for visiting!`
+                )}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition cursor-pointer border border-slate-200/80"
+              >
+                Cafe Coffee Day Bill
+              </button>
+            </div>
+
+            <textarea
+              rows={8}
+              value={pastedReceiptText}
+              onChange={(e) => setPastedReceiptText(e.target.value)}
+              placeholder="Paste raw receipt text, invoice breakdown, or SMS summary here..."
+              className="w-full p-3.5 rounded-2xl border border-slate-200 font-mono text-xs text-slate-800 bg-slate-50/60 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPasteModalOpen(false);
+                  setPastedReceiptText('');
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={!pastedReceiptText.trim()}
+                onClick={() => {
+                  if (!pastedReceiptText.trim()) return;
+                  const textBlob = new Blob([pastedReceiptText], { type: 'text/plain' });
+                  const textFile = new File([textBlob], 'pasted_receipt.txt', { type: 'text/plain' });
+                  setIsPasteModalOpen(false);
+                  setPastedReceiptText('');
+                  if (onFileUpload) {
+                    onFileUpload(textFile);
+                  }
+                }}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition shadow-md shadow-indigo-600/20 flex items-center space-x-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Extract & Review Receipt</span>
               </button>
             </div>
           </div>
