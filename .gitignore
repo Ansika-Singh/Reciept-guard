@@ -1,34 +1,57 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Python & Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
 
-node_modules
-dist
-dist-ssr
-*.local
+# Testing & Caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.oxlintrc.cache
 
-# Environment variables — NEVER commit API keys
+# Databases & Vector Stores
+*.db
+*.sqlite
+*.sqlite3
+backend/receiptguard.db
+backend/chroma_db/
+chroma_db/
+backend/uploads/
+backend/receipt_vault/
+
+# Environment Variables & Secrets
 .env
 .env.local
 .env.*.local
-!.env.example
+*.pem
+*.key
 
-# Temporary archives / inspection folders
-*.zip
-temp_*
+# Frontend Node / Vite
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# OS & Editor
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*.zip
+.vercel

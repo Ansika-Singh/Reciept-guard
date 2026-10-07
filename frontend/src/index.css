@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+
+.glass-card-hover {
+  transition: all 0.25s ease-in-out;
+}
+.glass-card-hover:hover {
+  background: #ffffff;
+  border-color: rgba(99, 102, 241, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(79, 70, 229, 0.08);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.15);
+}
+
+.glow-indigo {
+  box-shadow: 0 0 25px -3px rgba(99, 102, 241, 0.15);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 3D & Marquee Motion Utilities */
+@keyframes marquee-up {
+  0% { transform: translateY(0%); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes marquee-down {
+  0% { transform: translateY(-50%); }
+  100% { transform: translateY(0%); }
+}
+
+@keyframes marquee-left {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+.animate-marquee-up {
+  animation: marquee-up var(--duration, 35s) linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-down {
+  animation: marquee-down var(--duration, 35s) linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-left {
+  animation: marquee-left var(--duration, 35s) linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-right {
+  animation: marquee-right var(--duration, 35s) linear infinite;
+  will-change: transform;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Edge Masking Utilities */
+.mask-gradient-y {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+.mask-gradient-x {
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-up,
+  .animate-marquee-down,
+  .animate-marquee-left,
+  .animate-marquee-right,
+  .animate-subtle-float,
+  .animate-canvas-drift {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* Dedicated Hero Motion Layer Styles */
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.background-motion {
+  position: absolute;
+  inset: -15% -12%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-animation-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+@keyframes canvas-slow-drift {
+  0% {
+    transform: translate3d(-20px, 0px, 0) rotateZ(-5deg);
+  }
+  50% {
+    transform: translate3d(22px, -22px, 0) rotateZ(-5deg);
+  }
+  100% {
+    transform: translate3d(-20px, 0px, 0) rotateZ(-5deg);
+  }
+}
+
+.animate-canvas-drift {
+  animation: canvas-slow-drift 24s ease-in-out infinite;
+  will-change: transform;
+}
+
+
