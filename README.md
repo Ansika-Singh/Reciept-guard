@@ -1,146 +1,135 @@
-# ReceiptGuard AI
+# RECEIPTGUARD AI
+> **"Don't just store your receipt. Protect what you already bought."**
 
-> **CYRUS HACK-A-THON 2026** &middot; Problem Statement 03: *"Smart Receipt & Invoice Snapshot Auditor"*  
-> **Tagline:** *"Turn receipts into financial intelligence."*  
-> **Team:** Pixel Pirates
-
----
-
-## Overview
-
-**ReceiptGuard AI** is an AI-assisted expense review and receipt auditing tool. OCR is only the beginning:
-1. **Snap & Downscale:** Users capture or upload receipt images (drag-and-drop, camera capture, file picker). Large photos are automatically downscaled on an HTML5 canvas (max 1600px) and fingerprinted with a 64-bit Average Perceptual Hash (aHash).
-2. **AI-Assisted Extraction:** Uses Google's **Gemini Vision API** (model `gemini-2.5-flash`) via direct browser fetch with structured JSON output and schema validation, specially tuned for Indian receipts (₹ INR, GST, CGST, SGST, IGST).
-3. **Graceful Fallback:** If offline or if the Gemini API key is not configured, the app immediately switches to a manual-entry review mode without ever crashing, preserving the photo snapshot and thumbnail.
-4. **Deterministic Intelligence Engine:** Pure, offline, unit-tested detection functions audit expenses against historical records for:
-   - **Potential Duplicates:** Evaluates merchant name similarity (normalized Levenshtein / substring / token match &ge; 0.8), exact amounts (&plusmn;₹0.01), date proximity (&plusmn;1 day), and visual image hash similarity (Hamming distance &le; 5 bits).
-   - **Unusual Expenses:** Flags items exceeding mean + 2&sigma; or 2&times; category median (requiring &ge;3 baseline historical transactions).
-   - **Repeated Purchases:** Flags 3 or more transactions at the same merchant within a 7-day window.
-   - **Spending Spikes:** Flags weekly category spending &gt; 1.5&times; the baseline average of earlier weeks (&ge;3 prior weeks).
-5. **Deterministic Explanations:** Explains *why* every alert fired using plain English with actual numerical values from the user's data (no LLM latency or hallucination).
+ReceiptGuard AI is a Personal Purchase Protection Agent built for responsible, grounded AI hackathon evaluation. Immediately at ingestion, ReceiptGuard parses receipts, matches store return and warranty policies, performs deterministic date arithmetic (`purchase_date + policy_days`), flags return windows expiring soon (`< 7 days`), grounds RAG Q&A, and verifies order status directly against the database truth without LLM hallucinations.
 
 ---
 
-## Strict Wording Rules
+## Architecture Overview
 
-This application strictly adheres to the following terminology guidelines:
+```
+                      USER / BROWSER
+                            │
+                            ▼
+           REACT + TS FRONTEND (Vite + Tailwind)
+                            │
+                   REST / WEBSOCKET API
+                            │
+                            ▼
+            FASTAPI BACKEND (Python + Pydantic)
+                            │
+    ┌───────────────────────┼───────────────────────┐
+    ▼                       ▼                       ▼
+Receipt Processing    Policy Engine          Order Service
+  & Parsers          & Deterministic           & SQLite
+(PyMuPDF / OCR)         Calculator                DB
+    │                       │                       │
+    ▼                       ▼                       ▼
+Chroma Vector DB      Calculated Deadlines      Mock Orders
+(Shopper-Isolated)    & Proactive Alerts       (ORD-1001 etc.)
+    │                       │                       │
+    └───────────────────────┼───────────────────────┘
+                            ▼
+                  LangChain + ChatOllama RAG
+             (Grounded Q&A & Strict Fallbacks)
+```
 
-| Permitted Terminology | Prohibited Terminology |
-| :--- | :--- |
-| **"potential duplicate"** | *"fraud"* |
-| **"unusual expense"** | *"guaranteed"* |
-| **"requires review"** | *"100% accurate"* |
-| **"AI-assisted detection"** | Any invented accuracy % |
-| **"match strength: strong / moderate"** | Fabricated confidence scores |
+---
+
+## Key Differentiators & Anti-Hallucination Safeguards
+
+1. **Automatic Ingestion Pipeline**: Date arithmetic and return window calculations run immediately upon receipt ingestion before the user asks a question.
+2. **Deterministic Calculator**: Date calculations (`purchase_date + policy_days`), days remaining (`deadline - as_of_date`), and expiring flags (`days_remaining < 7`) are handled strictly in Python datetime logic — never delegated to LLM arithmetic.
+3. **Shopper-Isolated Retrieval**: Chroma collections are scoped per `shopper_id` (`shopper_{shopper_id}`) to guarantee multi-tenant vector data isolation.
+4. **Verified Order Status**: Queries real SQLite database records (`ORD-1001` -> Delivered). Unknown order IDs (`ORD-9999`) return a clean, un-fabricated "Order ID not found" state.
+5. **Deterministic Fallback Engine**: If Ollama or Chroma is offline, all calculated deadlines, policy rules, proactive alerts, and UI continue to work 100% reliably.
+6. **Try Demo Mode**: One-click 60-second judge demo flow featuring pre-seeded realistic receipts (DemoMart Winter Jacket ₹4,999, Running Shoes, Laptop Pro).
 
 ---
 
 ## Tech Stack
 
-- **Frontend:** React 19 + Vite 8
-- **Styling:** Tailwind CSS v4 with custom SaaS color palette (`#154A82` primary, `#2F6BA8` mid-blue, `#F2A56B` warm accent, amber alert tints)
-- **Charts:** Chart.js & `react-chartjs-2` (Category Doughnut & Daily Spend Bar charts)
-- **AI/Vision:** Google Gemini Vision Flash (`gemini-2.5-flash`) direct browser fetch
-- **Storage:** `localStorage` behind an abstraction wrapper with ~200px JPEG thumbnail caching (staying well within the 5MB quota)
-- **Testing:** Vitest + React Testing Library (14 unit tests passing)
+- **Backend**: Python 3.10+, FastAPI, Pydantic v2, SQLAlchemy, SQLite, PyMuPDF, ChromaDB, LangChain.
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Lucide React, Framer Motion, Axios.
+- **Testing**: Pytest unit test suite covering date arithmetic, order lookups, and security isolation.
+- **Deployment**: Docker, Docker Compose, Nginx.
 
 ---
 
-## Quick Start & Installation
+## 60-Second Hackathon Judge Demo Flow
+
+1. **Start Backend & Frontend** (or click **"Try Demo"** in UI).
+2. **Click "Try Demo (60s)"** on the landing hero section.
+3. **Observe Ingestion Timeline**: Watch the live step-by-step progress checklist (Uploaded -> Parsed -> Extraction -> Policy Matched -> Calculator Executed -> Expiring Windows Flagged -> Indexed).
+4. **Proactive Protection Summary**:
+   - Immediate **ACTION REQUIRED** alert appears: *Winter Jacket (₹4,999)* return deadline is 10 Oct 2026, **5 days remaining**, flagged as **EXPIRING SOON** (<7 days threshold).
+5. **Click "Why this date?"**:
+   - Inspect the mathematical formula breakdown (`10 Sep 2026 + 30 days = 10 Oct 2026`) and policy section citation (`DemoMart Policy §3.1`).
+6. **Ask Grounded RAG Chat**:
+   - Ask: *"Can I still return my jacket?"* -> Response returns grounded answer with verified source citations.
+7. **Verify Order Status**:
+   - Click chip `ORD-1001` -> Displays **Delivered** status from SQLite DB.
+   - Click chip `ORD-9999` -> Displays **Order ID Not Found** without hallucination.
+
+---
+
+## Quickstart & Installation
+
+### Option 1: Local Development
 
 ```bash
-# 1. Clone repository
-git clone <repo-url>
-cd "ReceiptGuard AI"
+# 1. Clone repository & set up Python virtual environment
+python -m venv venv
+.\venv\Scripts\activate   # Windows
 
-# 2. Install dependencies
+# 2. Install backend dependencies
+pip install -r backend/requirements.txt
+
+# 3. Start FastAPI Backend (Port 8000)
+cd backend
+python -m uvicorn app.main:app --reload --port 8000
+
+# 4. In a new terminal, install frontend dependencies & start React Dev Server (Port 5173)
+cd frontend
 npm install
-
-# 3. (Optional) Configure Gemini API Key
-cp .env.example .env
-# Edit .env and set VITE_GEMINI_API_KEY=your_key_here
-# Note: You can also enter the API key directly in the UI via the "API Key" button!
-
-# 4. Start local development server
 npm run dev
-
-# 5. Run test suite
-npm run test
 ```
 
-The application will be running at `http://localhost:5173/`.
+Open browser at `http://localhost:5173`.
 
 ---
 
-## 7-Step Hackathon Demo Script
+### Option 2: Docker Compose
 
-Follow this step-by-step walkthrough to test and demonstrate all core features:
+```bash
+docker-compose up --build
+```
 
-### Step 1: Load Demo Data & View Dashboard
-1. Open `http://localhost:5173/` in your browser.
-2. Click the **"Load Demo Data"** button in the top right.
-3. Observe ~25 realistic seeded transactions appear across categories with dates calculated relative to today's date.
-4. Verify the **Total Spending**, **This Month**, and **Receipts Stored** KPI cards populate.
-5. Inspect the **Spending Over Time** (Bar chart) and **Spending by Category** (Doughnut chart).
-
-### Step 2: Test Potential Duplicate Alert (Live Upload)
-1. Click **"Add Receipt"** or navigate to the Upload screen.
-2. In the **"CYRUS Hackathon Quick-Test Receipts"** section, click **"Starbucks Coffee (₹420)"** (or drag `public/sample-receipts/starbucks_420.svg`).
-3. The image is downscaled, visual hash is computed, and the receipt is routed to the Review screen.
-4. **Observe the live pre-save alert:**
-   - Title: **"Potential Duplicate Detected"**
-   - Badge: `match strength: strong`
-   - Reasons:
-     - *"Merchant names match (Starbucks Coffee and Starbucks Coffee)"*
-     - *"Identical total amount of ₹420.00"*
-     - *"Transaction dates are within 1 day"*
-     - *"Receipt image visual snapshot matches closely"*
-5. Click **"Save Expense"** to file the receipt.
-
-### Step 3: Test Unusual Expense Alert (Live Upload)
-1. Click **"Add Receipt"** again.
-2. Click the **"Croma Megastore (₹8,499)"** preset button (or upload `public/sample-receipts/croma_electronics_8499.svg`).
-3. Notice the category is set to **Electronics**.
-4. **Observe the live pre-save alert:**
-   - Title: **"Unusual Expense Requires Review"**
-   - Badge: `requires review`
-   - Reasons:
-     - *"Amount ₹8,499.00 is significantly above your usual Electronics range (historically ₹1,850.00 to ₹2,899.00)"*
-     - *"This receipt is more than 2x your historical Electronics median (₹4,698.00)"*
-     - *"Exceeds 2 standard deviations above mean"*
-5. Click **"Save Expense"**.
-
-### Step 4: Inspect the Dashboard "Requires Review" Section
-1. Return to the Dashboard.
-2. Look at the **"Requires Review"** summary card (highlighted in amber).
-3. Under **"Items Requiring Review"**, examine the generated alert cards.
-4. Click **"Looks fine"** on any alert to dismiss it. Verify that the dismissal is stored and the count decreases.
-5. On the duplicate alert, you can also click **"Delete duplicate"** to purge the redundant transaction.
-
-### Step 5: Test Search and Category Filtering
-1. In the **Recorded Transactions** table:
-   - Type `"Starbucks"` in the search bar &rarr; filters instantly to Starbucks visits with alert badges.
-   - Type `"Electronics"` &rarr; displays historical baseline electronics purchases plus the new ₹8,499 item.
-   - Click the **"Food"** or **"Shopping"** category filter pills.
-2. Notice the ~200px thumbnail preview next to each receipt, preserved without overflowing localStorage.
-
-### Step 6: Test Normal Receipt (Amazon India ₹2,499)
-1. Click **"Add Receipt"** and select **"Amazon India (₹2,499)"**.
-2. Notice the 18% IGST tax breakdown (`₹381.20`) and items line (`SanDisk Extreme 1TB SSD`).
-3. Verify that **no alert is raised**, showing status **"Clean"** because it fits within customary spending patterns.
-
-### Step 7: Test Offline / Manual Entry Fallback
-1. If the Gemini API key is absent or network is disconnected, upload any receipt image or click **"Manual Entry"**.
-2. A clear banner states:
-   > *"Manual Entry Mode Active — AI extraction was unavailable. Please verify or input your receipt details below. Your receipt image snapshot and perceptual hash were preserved."*
-3. The app **never crashes** and allows smooth manual recording.
+Access frontend at `http://localhost:5173` and API docs at `http://localhost:8000/docs`.
 
 ---
 
-## Known Limitations
+## Running Automated Tests
 
-1. **Client-Side Storage Quota:** Receipts and thumbnails are stored in browser `localStorage`. To avoid the ~5 MB browser quota limit, images are converted to ~200px JPEG thumbnails for persistence rather than storing raw 10MB camera files.
-2. **Prototype API Key Exposure:** The Gemini API key is configured in the frontend environment (`VITE_GEMINI_API_KEY` or browser override). In a production release, Gemini API calls should be proxied through a secure backend server.
-3. **Single Currency Focus:** Tailored for Indian Rupee (₹ INR) receipts with Indian tax breakdowns (GST/CGST/SGST/IGST). Multi-currency conversion is not yet supported.
-4. **Perceptual aHash Simplicity:** Average hash (aHash 8&times;8) is computationally lightweight for pure in-browser execution; highly warped or cropped receipts may require perceptual pHash/dHash algorithms for advanced image matching.
-5. **No Multi-User Authentication:** Designed as a single-user prototype without cloud database synchronization.
+```bash
+cd backend
+..\venv\Scripts\python.exe -m pytest tests/ -v
+```
+
+Tests cover:
+- Deterministic return date calculations (5 days expiring soon, 7 days normal, 6 days expiring soon, 0 days, negative days).
+- Valid order lookups (`ORD-1001`).
+- Unknown order lookups (`ORD-9999`).
+- Shopper isolation security checks.
+
+---
+
+## API Endpoints
+
+- `GET /api/health` - Health check & Ollama connection status.
+- `POST /api/receipts/upload` - Upload receipt file (PDF, PNG, JPG, TXT).
+- `POST /api/receipts/demo-seed` - Trigger 60-second judge demo flow.
+- `GET /api/receipts/{receipt_id}/summary` - Fetch proactive purchase protection summary.
+- `POST /api/chat` - RAG Q&A assistant grounded in uploaded receipt and policy.
+- `POST /api/orders/status` - Query mock order database by Order ID.
+- `GET /api/audit/{receipt_id}` - Retrieve audit trail log.
