@@ -1,0 +1,9 @@
+# Full Local / Docker Development AI Stack
+-r requirements.txt
+pymupdf>=1.23.0
+rapidocr-onnxruntime>=1.3.0
+chromadb>=0.4.22
+langchain-core>=0.1.0
+langchain-community>=0.0.20
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

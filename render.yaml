@@ -1,0 +1,24 @@
+services:
+  # ==============================================================================
+  # ReceiptGuard AI - Fullstack Web Service on Render
+  # Runs the high-performance FastAPI server and serves the React light SaaS frontend.
+  # ==============================================================================
+  - type: web
+    name: receiptguard-ai
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: bash build_render.sh
+    startCommand: uvicorn api.index:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DEMO_MODE
+        value: "true"
+      - key: STORAGE_PROVIDER
+        value: local
+      - key: AI_PROVIDER
+        value: deterministic
+      - key: IS_SERVERLESS
+        value: "false"

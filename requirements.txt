@@ -1,0 +1,10 @@
+# Production / Vercel Serverless Lightweight Dependencies (<30 MB uncompressed)
+fastapi>=0.109.0
+uvicorn>=0.27.0
+mangum>=0.17.0
+pydantic>=2.6.0
+sqlalchemy>=2.0.25
+python-multipart>=0.0.9
+httpx>=0.26.0
+pypdf>=4.0.0
+pillow>=10.2.0
