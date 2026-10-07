@@ -12,7 +12,8 @@ import {
   Package,
   RotateCcw,
   Shield,
-  UploadCloud
+  UploadCloud,
+  Sparkles
 } from 'lucide-react';
 
 interface UnifiedComposerProps {
@@ -260,6 +261,19 @@ export const UnifiedComposer: React.FC<UnifiedComposerProps> = ({
 
   const hasContent = inputText.trim().length > 0 || attachedFiles.length > 0;
 
+  const isLikelyReceiptText =
+    inputText.includes('\n') &&
+    /(?:total|invoice|bill|subtotal|gst|tax|order|₹|\$|rs\.?)/i.test(inputText);
+
+  const handleExtractFromPastedText = () => {
+    if (!inputText.trim()) return;
+    const textBlob = new Blob([inputText], { type: 'text/plain' });
+    const textFile = new File([textBlob], 'pasted_receipt.txt', { type: 'text/plain' });
+    onFileUpload(textFile);
+    setInputText('');
+    setIsExpanded(false);
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto space-y-3">
       
@@ -458,6 +472,23 @@ export const UnifiedComposer: React.FC<UnifiedComposerProps> = ({
           )}
         </div>
 
+        {/* Smart Receipt Text Detection Banner */}
+        {isExpanded && isLikelyReceiptText && (
+          <div className="mt-2.5 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs flex items-center justify-between text-indigo-950 animate-in fade-in duration-150">
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+              <span>Receipt text detected! Extract & review automatically without typing.</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleExtractFromPastedText}
+              className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-xs cursor-pointer flex items-center space-x-1 flex-shrink-0"
+            >
+              <span>Extract & Verify</span>
+            </button>
+          </div>
+        )}
+
         {/* Expanded Bottom Toolbar */}
         {isExpanded && (
           <div className={`flex items-center justify-between pt-3 mt-2 border-t ${
@@ -550,6 +581,34 @@ export const UnifiedComposer: React.FC<UnifiedComposerProps> = ({
           >
             <UploadCloud className="w-3.5 h-3.5 text-indigo-600" />
             <span>Upload Receipt</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setInputText(
+`Retail Invoice: Croma Electronics
+Date: 2026-09-20  Time: 18:30
+Invoice No: CROMA-BLR-8821
+Items:
+1. Sony WH-1000XM5 Headphones - Qty: 1 - Price: ₹24,990.00
+2. Type-C Fast Charger - Qty: 1 - Price: ₹1,499.00
+Subtotal: ₹26,489.00
+GST (18%): ₹4,768.02
+Grand Total: ₹31,257.02
+Return Window: 15 Days from purchase`
+              );
+              setIsExpanded(true);
+              setTimeout(() => textareaRef.current?.focus(), 50);
+            }}
+            className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition shadow-2xs cursor-pointer ${
+              theme === 'light'
+                ? 'bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 hover:text-slate-900'
+                : 'bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Paste Receipt Sample</span>
           </button>
 
           <button

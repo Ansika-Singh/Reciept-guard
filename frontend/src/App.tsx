@@ -690,6 +690,7 @@ export function App() {
           <ReceiptVault
             shopperId={shopperId}
             onOpenUploader={() => setActiveTab('dashboard')}
+            onFileUpload={handleFileUpload}
             onAskReceiptGuard={handleAskReceiptGuard}
             refreshTrigger={vaultRefreshTrigger}
           />
